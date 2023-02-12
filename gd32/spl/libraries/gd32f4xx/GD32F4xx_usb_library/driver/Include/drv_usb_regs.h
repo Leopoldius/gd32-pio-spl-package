@@ -3,10 +3,12 @@
     \brief   USB cell registers definition and handle macros
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
+    \version 2022-03-09, V3.1.0, firmware for GD32F4xx
+    \version 2022-06-30, V3.2.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2020, GigaDevice Semiconductor Inc.
+    Copyright (c) 2022, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -181,7 +183,7 @@ typedef struct _usb_regs
     usb_pr       *pr[15];                           /*!< USB Host channel-x control register */
 
     __IO uint32_t     *HPCS;                        /*!< USB host port control and status register */
-    __IO uint32_t     *DFIFO[USBFS_MAX_TX_FIFOS];       
+    __IO uint32_t     *DFIFO[USBFS_MAX_TX_FIFOS];
     __IO uint32_t     *PWRCLKCTL;                   /*!< USB power and clock control register */
 } usb_core_regs;
 
@@ -302,9 +304,7 @@ typedef struct _usb_regs
 #define HNPTFLEN_HNPTXFD          BITS(16, 31)        /*!< non-periodic Tx FIFO depth */
 #define HNPTFLEN_HNPTXRSAR        BITS(0, 15)         /*!< non-periodic Tx RAM start address */
 
-/**
-  * @brief USB IN endpoint 0 transmit FIFO length register bits definitions
-  */
+/* USB IN endpoint 0 transmit FIFO length register bits definitions */
 #define DIEP0TFLEN_IEP0TXFD       BITS(16, 31)        /*!< IN Endpoint 0 Tx FIFO depth */
 #define DIEP0TFLEN_IEP0TXRSAR     BITS(0, 15)         /*!< IN Endpoint 0 TX RAM start address */
 
@@ -355,7 +355,6 @@ typedef struct _usb_regs
 #define HPTFQSTAT_EPNUM           BITS(27, 30)        /*!< endpoint number */
 #define HPTFQSTAT_TYPE            BITS(25, 26)        /*!< token type */
 #define HPTFQSTAT_TMF             BIT(24)             /*!< terminate flag */
-
 
 #define TFQSTAT_TXFS              BITS(0, 15)
 #define TFQSTAT_CNUM              BITS(27, 30)
@@ -432,12 +431,11 @@ typedef struct _usb_regs
 /* host channel-x DMA address register bits definitions */
 #define HCHDMAADDR_DMAADDR        BITS(0, 31)         /*!< DMA address */
 
+#define PORT_SPEED(x)             (((uint32_t)(x) << 17) & HPCS_PS)         /*!< Port speed */
 
-#define PORT_SPEED(x)             (((uint32_t)(x) << 17) & HPCS_PS) /*!< Port speed */
-
-#define PORT_SPEED_HIGH           PORT_SPEED(0U)                             /*!< high speed */
-#define PORT_SPEED_FULL           PORT_SPEED(1U)                             /*!< full speed */
-#define PORT_SPEED_LOW            PORT_SPEED(2U)                             /*!< low speed */
+#define PORT_SPEED_HIGH           PORT_SPEED(0U)                            /*!< high speed */
+#define PORT_SPEED_FULL           PORT_SPEED(1U)                            /*!< full speed */
+#define PORT_SPEED_LOW            PORT_SPEED(2U)                            /*!< low speed */
 
 #define PIPE_CTL_DAR(x)           (((uint32_t)(x) << 22) & HCHCTL_DAR)      /*!< device address */
 #define PIPE_CTL_EPTYPE(x)        (((uint32_t)(x) << 18) & HCHCTL_EPTYPE)   /*!< endpoint type */
@@ -485,7 +483,7 @@ extern const uint32_t PIPE_DPID[2];
 #define DIEPINTEN_EPTXFUDEN       BIT(4)              /*!< endpoint Tx FIFO underrun interrupt enable bit */
 #define DIEPINTEN_CITOEN          BIT(3)              /*!< control In Timeout interrupt enable bit */
 #define DIEPINTEN_EPDISEN         BIT(1)              /*!< endpoint disabled interrupt enable bit */
-#define DIEPINTEN_TFEN            BIT(0)              /*!< transfer finished interrupt enable bit */ 
+#define DIEPINTEN_TFEN            BIT(0)              /*!< transfer finished interrupt enable bit */
 
 /* device OUT endpoint common interrupt enable registers bits definitions */
 #define DOEPINTEN_NYETEN          BIT(14)             /*!< NYET handshake is sent interrupt enable bit */
@@ -621,13 +619,13 @@ extern const uint32_t PIPE_DPID[2];
 #define FRAME_INTERVAL_90         DCFG_PFRI(2U)                     /*!< 90% of the frame time */
 #define FRAME_INTERVAL_95         DCFG_PFRI(3U)                     /*!< 95% of the frame time */
 
-#define DCFG_DEVSPEED(regval)     (DCFG_DS & ((regval) << 0))      /*!< device speed configuration */
+#define DCFG_DEVSPEED(regval)     (DCFG_DS & ((regval) << 0))       /*!< device speed configuration */
 
 #define USB_SPEED_EXP_HIGH        DCFG_DEVSPEED(0U)                 /*!< device external PHY high speed */
 #define USB_SPEED_EXP_FULL        DCFG_DEVSPEED(1U)                 /*!< device external PHY full speed */
 #define USB_SPEED_INP_FULL        DCFG_DEVSPEED(3U)                 /*!< device internal PHY full speed */
 
-#define DEP0_MPL(regval)          (DEP0CTL_MPL & ((regval) << 0))  /*!< maximum packet length configuration */
+#define DEP0_MPL(regval)          (DEP0CTL_MPL & ((regval) << 0))   /*!< maximum packet length configuration */
 
 #define EP0MPL_64                 DEP0_MPL(0U)                      /*!< maximum packet length 64 bytes */
 #define EP0MPL_32                 DEP0_MPL(1U)                      /*!< maximum packet length 32 bytes */
@@ -658,5 +656,9 @@ extern const uint32_t PIPE_DPID[2];
 #define EP2_IN                    ((uint8_t)0x82)                       /*!< endpoint in 2 */
 #define EP3_OUT                   ((uint8_t)0x03)                       /*!< endpoint out 3 */
 #define EP3_IN                    ((uint8_t)0x83)                       /*!< endpoint in 3 */
+#define EP4_OUT                   ((uint8_t)0x04)                       /*!< endpoint out 4 */
+#define EP4_IN                    ((uint8_t)0x84)                       /*!< endpoint in 4 */
+#define EP5_OUT                   ((uint8_t)0x05)                       /*!< endpoint out 5 */
+#define EP5_IN                    ((uint8_t)0x85)                       /*!< endpoint in 5 */
 
 #endif /* __DRV_USB_REGS_H */

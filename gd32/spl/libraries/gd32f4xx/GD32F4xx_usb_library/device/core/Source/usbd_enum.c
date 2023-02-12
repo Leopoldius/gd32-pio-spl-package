@@ -3,10 +3,12 @@
     \brief   USB enumeration function
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
+    \version 2022-03-09, V3.1.0, firmware for GD32F4xx
+    \version 2022-06-30, V3.2.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2020, GigaDevice Semiconductor Inc.
+    Copyright (c) 2022, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -45,7 +47,7 @@ extern usbd_status usbd_OEM_req(usb_dev *udev, usb_req *req);
 static usb_reqsta _usb_std_reserved                     (usb_core_driver *udev, usb_req *req);
 static uint8_t* _usb_dev_desc_get                       (usb_core_driver *udev, uint8_t index, uint16_t *len);
 static uint8_t* _usb_config_desc_get                    (usb_core_driver *udev, uint8_t index, uint16_t *len);
-#ifdef USE_USB_HS
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
 static uint8_t* _usb_other_speed_config_desc_get        (usb_core_driver *udev, uint8_t index, uint16_t *len);
 static uint8_t* _usb_qualifier_desc_get                 (usb_core_driver *udev, uint8_t index, uint16_t *len);
 #endif
@@ -85,7 +87,7 @@ static uint8_t* (*std_desc_get[])(usb_core_driver *udev, uint8_t index, uint16_t
     [(uint8_t)USB_DESCTYPE_DEV - 1U]              = _usb_dev_desc_get,
     [(uint8_t)USB_DESCTYPE_CONFIG - 1U]           = _usb_config_desc_get,
     [(uint8_t)USB_DESCTYPE_STR - 1U]              = _usb_str_desc_get,
-#ifdef USE_USB_HS
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
     [(uint8_t)USB_DESCTYPE_DEV_QUALIFIER - 3U]    = _usb_qualifier_desc_get,
     [(uint8_t)USB_DESCTYPE_OTHER_SPD_CONFIG - 3U] = _usb_other_speed_config_desc_get,
 #endif
@@ -260,12 +262,13 @@ static uint8_t* _usb_config_desc_get (usb_core_driver *udev, uint8_t index, uint
 {
     (void)index;
 
-    *len = udev->dev.desc->config_desc[2];
+    *len = udev->dev.desc->config_desc[2] | (udev->dev.desc->config_desc[3]<< 8U);
 
     return udev->dev.desc->config_desc;
 }
 
-#ifdef USE_USB_HS
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
+
 /*!
     \brief      get the other speed configuration descriptor
     \brief[in]  udev: pointer to USB device instance
@@ -297,7 +300,8 @@ static uint8_t* _usb_qualifier_desc_get (usb_core_driver *udev, uint8_t index, u
 
     return udev->dev.desc->qualifier_desc;
 }
-#endif
+
+#endif /* USE_USB_HS && USE_ULPI_PHY */
 
 /*!
     \brief      get the BOS descriptor
@@ -535,7 +539,7 @@ static usb_reqsta _usb_std_getdescriptor (usb_core_driver *udev, usb_req *req)
 {
     uint8_t desc_type = 0U;
     uint8_t desc_index = 0U;
-    
+
     usb_reqsta status = REQ_NOTSUPP;
 
     usb_transc *transc = &udev->dev.transc_in[0];
@@ -569,12 +573,11 @@ static usb_reqsta _usb_std_getdescriptor (usb_core_driver *udev, usb_req *req)
         case USB_DESCTYPE_EP:
             break;
 
-#ifdef USE_USB_HS
-
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
         case USB_DESCTYPE_DEV_QUALIFIER:
             transc->xfer_buf = std_desc_get[desc_type - 3U](udev, desc_index, (uint16_t *)&(transc->remain_len));
             break;
-        
+
         case USB_DESCTYPE_OTHER_SPD_CONFIG:
             transc->xfer_buf = std_desc_get[desc_type - 3U](udev, desc_index, (uint16_t *)&(transc->remain_len));
             break;
@@ -599,7 +602,7 @@ static usb_reqsta _usb_std_getdescriptor (usb_core_driver *udev, usb_req *req)
 
     case USB_RECPTYPE_EP:
         break;
-        
+
     default:
         break;
     }

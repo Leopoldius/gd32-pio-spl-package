@@ -3,10 +3,12 @@
     \brief   USB MSC host FATFS related functions
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
+    \version 2022-03-09, V3.1.0, firmware for GD32F4xx
+    \version 2022-06-30, V3.2.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2020, GigaDevice Semiconductor Inc.
+    Copyright (c) 2022, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -205,7 +207,7 @@ DRESULT disk_ioctl (BYTE drv, BYTE ctrl, void *buff)
 
     /* get erase block size in unit of sector (dword) */
     case GET_BLOCK_SIZE:
-        *(DWORD*)buff = 512;
+        *(DWORD *)buff = 512U;
         break;
 
     default:
@@ -222,12 +224,12 @@ DRESULT disk_ioctl (BYTE drv, BYTE ctrl, void *buff)
     \param[out] none
     \retval     time value
 */
-DWORD get_fattime(void) {
-
-    return    ((DWORD)(2019U - 1980U) << 25U)   /* year 2019 */
-            | ((DWORD)1U << 21U)                /* month 1 */
-            | ((DWORD)1U << 16U)                /* day 1 */
-            | ((DWORD)0U << 11U)                /* hour 0 */
-            | ((DWORD)0U << 5U)                 /* min 0 */
-            | ((DWORD)0U >> 1U);                /* sec 0 */
+DWORD get_fattime (void)
+{
+    return ((DWORD)(2019U - 1980U) << 25U)     /* year 2019 */
+           | ((DWORD)1U << 21U)                /* month 1 */
+           | ((DWORD)1U << 16U)                /* day 1 */
+           | ((DWORD)0U << 11U)                /* hour 0 */
+           | ((DWORD)0U << 5U)                 /* min 0 */
+           | ((DWORD)0U >> 1U);                /* sec 0 */
 }

@@ -3,10 +3,12 @@
     \brief   USB device mode interrupt routines
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
+    \version 2022-03-09, V3.1.0, firmware for GD32F4xx
+    \version 2022-06-30, V3.2.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2020, GigaDevice Semiconductor Inc.
+    Copyright (c) 2022, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -36,13 +38,13 @@ OF SUCH DAMAGE.
 #include "drv_usbd_int.h"
 #include "usbd_transc.h"
 
+/* local function prototypes ('static') */
 static uint32_t usbd_int_epout                 (usb_core_driver *udev);
 static uint32_t usbd_int_epin                  (usb_core_driver *udev);
 static uint32_t usbd_int_rxfifo                (usb_core_driver *udev);
 static uint32_t usbd_int_reset                 (usb_core_driver *udev);
 static uint32_t usbd_int_enumfinish            (usb_core_driver *udev);
 static uint32_t usbd_int_suspend               (usb_core_driver *udev);
-
 static uint32_t usbd_emptytxfifo_write         (usb_core_driver *udev, uint32_t ep_num);
 
 static const uint8_t USB_SPEED[4] = {
@@ -61,7 +63,8 @@ static const uint8_t USB_SPEED[4] = {
 void usbd_isr (usb_core_driver *udev)
 {
     if (HOST_MODE != (udev->regs.gr->GINTF & GINTF_COPM)) {
-        uint32_t intr = udev->regs.gr->GINTF & udev->regs.gr->GINTEN;
+        uint32_t intr = udev->regs.gr->GINTF;
+        intr &= udev->regs.gr->GINTEN;
 
         /* there are no interrupts, avoid spurious interrupt */
         if (!intr) {
@@ -95,7 +98,7 @@ void usbd_isr (usb_core_driver *udev)
         /* start of frame interrupt */
         if (intr & GINTF_SOF) {
             if (udev->dev.class_core->SOF) {
-                (void)udev->dev.class_core->SOF(udev); 
+                (void)udev->dev.class_core->SOF(udev);
             }
 
             /* clear interrupt */
@@ -228,7 +231,7 @@ uint32_t usbd_int_dedicated_ep1in (usb_core_driver *udev)
     return 1;
 }
 
-#endif
+#endif /* USB_HS_DEDICATED_EP1_ENABLED */
 
 /*!
     \brief      indicates that an OUT endpoint has a pending interrupt
@@ -347,22 +350,20 @@ static uint32_t usbd_int_rxfifo (usb_core_driver *udev)
     bcount = (devrxstat & GRSTATRP_BCOUNT) >> 4U;
     data_PID = (uint8_t)((devrxstat & GRSTATRP_DPID) >> 15U);
 
-#ifdef USE_USB_HS
-    #ifdef USE_ULPI_PHY
-        #ifndef USE_450Z_EVAL
-            /* ensure no-DMA mode can work */
-            if (0U == (udev->regs.er_out[ep_num]->DOEPLEN & DEPLEN_PCNT)) {
-                uint32_t devepctl = udev->regs.er_out[ep_num]->DOEPCTL;
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
+    #ifndef USE_450Z_EVAL
+        /* ensure no-DMA mode can work */
+        if (0U == (udev->regs.er_out[ep_num]->DOEPLEN & DEPLEN_PCNT)) {
+            uint32_t devepctl = udev->regs.er_out[ep_num]->DOEPCTL;
 
-                devepctl |= DEPCTL_SNAK;
-                devepctl &= ~DEPCTL_EPEN;
-                devepctl &= ~DEPCTL_EPD;
+            devepctl |= DEPCTL_SNAK;
+            devepctl &= ~DEPCTL_EPEN;
+            devepctl &= ~DEPCTL_EPD;
 
-                udev->regs.er_out[ep_num]->DOEPCTL = devepctl;
-            }
-        #endif /* USE_450Z_EVAL */
-    #endif /* USE_ULPI_PHY */
-#endif /* USE_USB_HS */
+            udev->regs.er_out[ep_num]->DOEPCTL = devepctl;
+        }
+    #endif /* USE_450Z_EVAL */
+#endif /* USE_USB_HS && USE_ULPI_PHY */
 
     switch ((devrxstat & GRSTATRP_RPCKST) >> 17U) {
     case RSTAT_GOUT_NAK:
@@ -417,7 +418,7 @@ static uint32_t usbd_int_reset (usb_core_driver *udev)
     /* clear the remote wakeup signaling */
     udev->regs.dr->DCTL &= ~DCTL_RWKUP;
 
-    /* flush the TX FIFO */
+    /* flush the Tx FIFO */
     (void)usb_txfifo_flush (&udev->regs, 0U);
 
     for (i = 0U; i < udev->bp.num_ep; i++) {
@@ -436,14 +437,14 @@ static uint32_t usbd_int_reset (usb_core_driver *udev)
 
 #ifdef USB_HS_DEDICATED_EP1_ENABLED
     udev->regs.dr->DOEP1INTEN = DOEPINTEN_STPFEN | DOEPINTEN_TFEN;
-#endif
+#endif /* USB_HS_DEDICATED_EP1_ENABLED */
 
     /* enable IN endpoint interrupts */
     udev->regs.dr->DIEPINTEN = DIEPINTEN_TFEN;
 
 #ifdef USB_HS_DEDICATED_EP1_ENABLED
     udev->regs.dr->DIEP1INTEN = DIEPINTEN_TFEN;
-#endif
+#endif /* USB_HS_DEDICATED_EP1_ENABLED */
 
     /* reset device address */
     udev->regs.dr->DCFG &= ~DCFG_DAR;
@@ -520,7 +521,7 @@ static uint32_t usbd_int_suspend (usb_core_driver *udev)
 {
     __IO uint8_t low_power = udev->bp.low_power;
     __IO uint8_t suspend = (uint8_t)(udev->regs.dr->DSTAT & DSTAT_SPST);
-    __IO uint8_t is_configured = (udev->dev.cur_status == (uint8_t)USBD_CONFIGURED)? 1U : 0U;
+    __IO uint8_t is_configured = (udev->dev.cur_status == (uint8_t)USBD_CONFIGURED) ? 1U : 0U;
 
     udev->dev.backup_status = udev->dev.cur_status;
     udev->dev.cur_status = (uint8_t)USBD_SUSPENDED;
@@ -530,7 +531,7 @@ static uint32_t usbd_int_suspend (usb_core_driver *udev)
         *udev->regs.PWRCLKCTL |= PWRCLKCTL_SUCLK | PWRCLKCTL_SHCLK;
 
         /* enter DEEP_SLEEP mode with LDO in low power mode */
-        pmu_to_deepsleepmode(PMU_LDO_LOWPOWER, WFI_CMD);
+        pmu_to_deepsleepmode (PMU_LDO_LOWPOWER, PMU_LOWDRIVER_DISABLE, WFI_CMD);
     }
 
     /* clear interrupt */

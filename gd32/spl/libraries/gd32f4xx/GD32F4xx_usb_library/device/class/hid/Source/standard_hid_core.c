@@ -3,10 +3,12 @@
     \brief   HID class driver
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
+    \version 2022-03-09, V3.1.0, firmware for GD32F4xx
+    \version 2022-06-30, V3.2.0, firmware for GD32F4xx
 */
 
 /*
-    Copyright (c) 2020, GigaDevice Semiconductor Inc.
+    Copyright (c) 2022, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -42,11 +44,11 @@ OF SUCH DAMAGE.
 /* USB standard device descriptor */
 __ALIGN_BEGIN const usb_desc_dev hid_dev_desc __ALIGN_END =
 {
-    .header = 
-     {
-         .bLength          = USB_DEV_DESC_LEN, 
-         .bDescriptorType  = USB_DESCTYPE_DEV
-     },
+    .header =
+    {
+        .bLength          = USB_DEV_DESC_LEN,
+        .bDescriptorType  = USB_DESCTYPE_DEV
+    },
     .bcdUSB                = 0x0200U,
     .bDeviceClass          = 0x00U,
     .bDeviceSubClass       = 0x00U,
@@ -63,13 +65,13 @@ __ALIGN_BEGIN const usb_desc_dev hid_dev_desc __ALIGN_END =
 
 __ALIGN_BEGIN const usb_hid_desc_config_set hid_config_desc __ALIGN_END = 
 {
-    .config = 
+    .config =
     {
-        .header = 
-         {
-             .bLength         = sizeof(usb_desc_config), 
-             .bDescriptorType = USB_DESCTYPE_CONFIG 
-         },
+        .header =
+        {
+            .bLength         = sizeof(usb_desc_config),
+            .bDescriptorType = USB_DESCTYPE_CONFIG
+        },
         .wTotalLength         = USB_HID_CONFIG_DESC_LEN,
         .bNumInterfaces       = 0x01U,
         .bConfigurationValue  = 0x01U,
@@ -78,13 +80,13 @@ __ALIGN_BEGIN const usb_hid_desc_config_set hid_config_desc __ALIGN_END =
         .bMaxPower            = 0x32U
     },
 
-    .hid_itf = 
+    .hid_itf =
     {
-        .header = 
-         {
-             .bLength         = sizeof(usb_desc_itf), 
-             .bDescriptorType = USB_DESCTYPE_ITF
-         },
+        .header =
+        {
+            .bLength         = sizeof(usb_desc_itf),
+            .bDescriptorType = USB_DESCTYPE_ITF
+        },
         .bInterfaceNumber     = 0x00U,
         .bAlternateSetting    = 0x00U,
         .bNumEndpoints        = 0x01U,
@@ -94,13 +96,13 @@ __ALIGN_BEGIN const usb_hid_desc_config_set hid_config_desc __ALIGN_END =
         .iInterface           = 0x00U
     },
 
-    .hid_vendor = 
+    .hid_vendor =
     {
-        .header = 
-         {
-             .bLength         = sizeof(usb_desc_hid), 
-             .bDescriptorType = USB_DESCTYPE_HID 
-         },
+        .header =
+        {
+            .bLength         = sizeof(usb_desc_hid),
+            .bDescriptorType = USB_DESCTYPE_HID
+        },
         .bcdHID               = 0x0111U,
         .bCountryCode         = 0x00U,
         .bNumDescriptors      = 0x01U,
@@ -108,13 +110,13 @@ __ALIGN_BEGIN const usb_hid_desc_config_set hid_config_desc __ALIGN_END =
         .wDescriptorLength    = USB_HID_REPORT_DESC_LEN,
     },
 
-    .hid_epin = 
+    .hid_epin =
     {
-        .header = 
-         {
-             .bLength         = sizeof(usb_desc_ep), 
-             .bDescriptorType = USB_DESCTYPE_EP
-         },
+        .header =
+        {
+            .bLength         = sizeof(usb_desc_ep),
+            .bDescriptorType = USB_DESCTYPE_EP
+        },
         .bEndpointAddress     = HID_IN_EP,
         .bmAttributes         = USB_EP_ATTR_INT,
         .wMaxPacketSize       = HID_IN_PACKET,
@@ -127,10 +129,10 @@ __ALIGN_BEGIN const usb_hid_desc_config_set other_speed_hid_config_desc __ALIGN_
     .config = 
     {
         .header = 
-         {
-             .bLength         = sizeof(usb_desc_config), 
-             .bDescriptorType = USB_DESCTYPE_OTHER_SPD_CONFIG 
-         },
+        {
+            .bLength         = sizeof(usb_desc_config), 
+            .bDescriptorType = USB_DESCTYPE_OTHER_SPD_CONFIG 
+        },
         .wTotalLength         = USB_HID_CONFIG_DESC_LEN,
         .bNumInterfaces       = 0x01U,
         .bConfigurationValue  = 0x01U,
@@ -142,10 +144,10 @@ __ALIGN_BEGIN const usb_hid_desc_config_set other_speed_hid_config_desc __ALIGN_
     .hid_itf = 
     {
         .header = 
-         {
-             .bLength         = sizeof(usb_desc_itf), 
-             .bDescriptorType = USB_DESCTYPE_ITF
-         },
+        {
+            .bLength         = sizeof(usb_desc_itf), 
+            .bDescriptorType = USB_DESCTYPE_ITF
+        },
         .bInterfaceNumber     = 0x00U,
         .bAlternateSetting    = 0x00U,
         .bNumEndpoints        = 0x01U,
@@ -158,10 +160,10 @@ __ALIGN_BEGIN const usb_hid_desc_config_set other_speed_hid_config_desc __ALIGN_
     .hid_vendor = 
     {
         .header = 
-         {
-             .bLength         = sizeof(usb_desc_hid), 
-             .bDescriptorType = USB_DESCTYPE_HID 
-         },
+        {
+            .bLength         = sizeof(usb_desc_hid), 
+            .bDescriptorType = USB_DESCTYPE_HID 
+        },
         .bcdHID               = 0x0111U,
         .bCountryCode         = 0x00U,
         .bNumDescriptors      = 0x01U,
@@ -172,10 +174,10 @@ __ALIGN_BEGIN const usb_hid_desc_config_set other_speed_hid_config_desc __ALIGN_
     .hid_epin = 
     {
         .header = 
-         {
-             .bLength         = sizeof(usb_desc_ep), 
-             .bDescriptorType = USB_DESCTYPE_EP
-         },
+        {
+            .bLength         = sizeof(usb_desc_ep), 
+            .bDescriptorType = USB_DESCTYPE_EP
+        },
         .bEndpointAddress     = HID_IN_EP,
         .bmAttributes         = USB_EP_ATTR_INT,
         .wMaxPacketSize       = HID_IN_PACKET,
@@ -200,44 +202,44 @@ __ALIGN_BEGIN const uint8_t usbd_qualifier_desc[10] __ALIGN_END =
 /* USB language ID Descriptor */
 static __ALIGN_BEGIN const usb_desc_LANGID usbd_language_id_desc __ALIGN_END = 
 {
-    .header = 
-     {
-         .bLength         = sizeof(usb_desc_LANGID), 
-         .bDescriptorType = USB_DESCTYPE_STR
-     },
+    .header =
+    {
+        .bLength         = sizeof(usb_desc_LANGID),
+        .bDescriptorType = USB_DESCTYPE_STR
+    },
     .wLANGID              = ENG_LANGID
 };
 
 /* USB manufacture string */
 static __ALIGN_BEGIN const usb_desc_str manufacturer_string __ALIGN_END = 
 {
-    .header = 
-     {
-         .bLength         = USB_STRING_LEN(10U), 
-         .bDescriptorType = USB_DESCTYPE_STR,
-     },
+    .header =
+    {
+        .bLength         = USB_STRING_LEN(10U),
+        .bDescriptorType = USB_DESCTYPE_STR,
+    },
     .unicode_string = {'G', 'i', 'g', 'a', 'D', 'e', 'v', 'i', 'c', 'e'}
 };
 
 /* USB product string */
 static __ALIGN_BEGIN const usb_desc_str product_string __ALIGN_END = 
 {
-    .header = 
-     {
-         .bLength         = USB_STRING_LEN(17U), 
-         .bDescriptorType = USB_DESCTYPE_STR,
-     },
-    .unicode_string = {'G', 'D', '3', '2', '-','U', 'S', 'B', '_', 'K', 'e', 'y', 'b', 'o', 'a', 'r', 'd'}
+    .header =
+    {
+        .bLength         = USB_STRING_LEN(17U),
+        .bDescriptorType = USB_DESCTYPE_STR,
+    },
+    .unicode_string = {'G', 'D', '3', '2', '-', 'U', 'S', 'B', '_', 'K', 'e', 'y', 'b', 'o', 'a', 'r', 'd'}
 };
 
 /* USBD serial string */
 static __ALIGN_BEGIN usb_desc_str serial_string __ALIGN_END = 
 {
-    .header = 
-     {
-         .bLength         = USB_STRING_LEN(12U), 
-         .bDescriptorType = USB_DESCTYPE_STR,
-     }
+    .header =
+    {
+        .bLength         = USB_STRING_LEN(12U),
+        .bDescriptorType = USB_DESCTYPE_STR,
+    }
 };
 
 void *const usbd_hid_strings[] = 
@@ -251,7 +253,7 @@ void *const usbd_hid_strings[] =
 usb_desc hid_desc = {
     .dev_desc    = (uint8_t *)&hid_dev_desc,
     .config_desc = (uint8_t *)&hid_config_desc,
-#ifdef USE_USB_HS
+#if defined(USE_USB_HS) && defined(USE_ULPI_PHY)
     .other_speed_config_desc = (uint8_t *)&other_speed_hid_config_desc,
     .qualifier_desc = (uint8_t *)&usbd_qualifier_desc,
 #endif
@@ -370,7 +372,7 @@ static uint8_t hid_init (usb_dev *udev, uint8_t config_index)
 }
 
 /*!
-    \brief      de-initialize the HID device
+    \brief      deinitialize the HID device
     \param[in]  udev: pointer to USB device instance
     \param[in]  config_index: configuration index
     \param[out] none

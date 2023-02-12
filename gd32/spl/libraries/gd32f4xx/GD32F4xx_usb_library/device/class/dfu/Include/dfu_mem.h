@@ -1,6 +1,6 @@
 /*!
-    \file    usb_iap_core.h
-    \brief   the header file of IAP driver
+    \file    dfu_mem.h
+    \brief   USB DFU device media access layer header file
 
     \version 2020-08-01, V3.0.0, firmware for GD32F4xx
     \version 2022-03-09, V3.1.0, firmware for GD32F4xx
@@ -34,66 +34,52 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#ifndef __USB_IAP_CORE_H
-#define __USB_IAP_CORE_H
+#ifndef __DFU_MEM_H
+#define __DFU_MEM_H
 
-#include "usbd_enum.h"
-#include "usb_hid.h"
+#include "usb_conf.h"
 
-#define USB_SERIAL_STRING_SIZE              0x06U
-
-#ifdef USE_USB_FS
-    #define USB_DESC_LEN_IAP_REPORT         35U
-#elif defined(USE_USB_HS)
-    #ifdef USE_ULPI_PHY
-        #define USB_DESC_LEN_IAP_REPORT     36U
-    #else
-        #define USB_DESC_LEN_IAP_REPORT     35U
-    #endif
-#else
-    #error "please select 'USE_USB_FS' or 'USE_USB_HS'"
-#endif
-
-#define USB_DESC_LEN_IAP_CONFIG_SET         41U
-
-/* special commands with download request */
-#define IAP_OPTION_BYTE1                    0x01U
-#define IAP_ERASE                           0x02U
-#define IAP_DNLOAD                          0x03U
-#define IAP_LEAVE                           0x04U
-#define IAP_GETBIN_ADDRESS                  0x05U
-#define IAP_OPTION_BYTE2                    0x06U
-
-typedef struct
+typedef struct _dfu_mem_prop
 {
-    uint8_t option_byte[IAP_IN_PACKET];
+    const uint8_t* pstr_desc;
 
-    /* state machine variables */
-    uint8_t dev_status[IAP_IN_PACKET];
-    uint8_t bin_addr[IAP_IN_PACKET];
+    uint8_t  (*mem_init)      (void);
+    uint8_t  (*mem_deinit)    (void);
+    uint8_t  (*mem_erase)     (uint32_t addr);
+    uint8_t  (*mem_write)     (uint8_t *buf, uint32_t addr, uint32_t len);
+    uint8_t* (*mem_read)      (uint8_t *buf, uint32_t addr, uint32_t len);
+    uint8_t  (*mem_checkaddr) (uint32_t addr);
 
-    uint8_t report_buf[IAP_OUT_PACKET + 1U];
+    const uint32_t erase_timeout;
+    const uint32_t write_timeout;
+} dfu_mem_prop;
 
-    uint8_t reportID;
-    uint8_t flag;
+typedef enum
+{
+    MEM_OK = 0,
+    MEM_FAIL
+} mem_status;
 
-    uint32_t protocol;
-    uint32_t idlestate;
+#define _1ST_BYTE(x)              (uint8_t)((x) & 0xFF)               /*!< addressing cycle 1st byte */
+#define _2ND_BYTE(x)              (uint8_t)(((x) & 0xFF00) >> 8)      /*!< addressing cycle 2nd byte */
+#define _3RD_BYTE(x)              (uint8_t)(((x) & 0xFF0000) >> 16)   /*!< addressing cycle 3rd byte */
 
-    uint16_t transfer_times;
-    uint16_t page_count;
-    uint16_t lps;           /* last packet size */
-    uint32_t file_length;
-    uint32_t base_address;
-} usbd_iap_handler;
-
-typedef void (*app_func) (void);
-
-extern usb_desc iap_desc;
-extern usb_class_core iap_class;
+#define POLLING_TIMEOUT_SET(x)    buffer[0] = _1ST_BYTE(x);\
+                                  buffer[1] = _2ND_BYTE(x);\
+                                  buffer[2] = _3RD_BYTE(x);
 
 /* function declarations */
-/* send IAP report */
-uint8_t iap_report_send (usb_dev *udev, uint8_t *report, uint32_t len);
+/* initialize the memory media on the GD32 */
+uint8_t dfu_mem_init(void);
+/* deinitialize the memory media on the GD32 */
+uint8_t dfu_mem_deinit(void);
+/* erase a memory sector */
+uint8_t dfu_mem_erase(uint32_t addr);
+/* write data to sectors of memory */
+uint8_t dfu_mem_write(uint8_t *buf, uint32_t addr, uint32_t len);
+/* read data from sectors of memory */
+uint8_t* dfu_mem_read(uint8_t *buf, uint32_t addr, uint32_t len);
+/* get the status of a given memory and store in buffer */
+uint8_t dfu_mem_getstatus(uint32_t addr, uint8_t cmd, uint8_t *buffer);
 
-#endif /* __USB_IAP_CORE_H */
+#endif /* __DFU_MEM_H */
